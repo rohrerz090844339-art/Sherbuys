@@ -1,0 +1,7 @@
+{
+    "name": "levovo/e-commercee",
+    "description": "E-commerce project for Railway deployment",
+    "require": {
+        "php": "^8.2"
+    }
+}

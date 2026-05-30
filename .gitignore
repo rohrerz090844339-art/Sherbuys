@@ -1,0 +1,7 @@
+.env
+vendor/
+.DS_Store
+Thumbs.db
+*.rar
+*.zip
+*.7z
