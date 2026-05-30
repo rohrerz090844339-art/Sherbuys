@@ -1,10 +1,6 @@
 <?php
-if (php_sapi_name() !== 'cli') {
-    if (!isset($_SERVER['REMOTE_ADDR']) || !in_array($_SERVER['REMOTE_ADDR'], ['127.0.0.1', '::1'])) {
-        http_response_code(403);
-        die('Access denied. This script can only be run from localhost.');
-    }
-}
+// Database Setup Script
+// On Railway, you can run this once to initialize your tables.
 
 DEFINE('DB_HOST',     getenv('MYSQLHOST') ?: '127.0.0.1');
 DEFINE('DB_USER',     getenv('MYSQLUSER') ?: 'root');
