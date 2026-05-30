@@ -6,19 +6,21 @@ if (php_sapi_name() !== 'cli') {
     }
 }
 
-DEFINE('DB_USER',     'root');
-DEFINE('DB_PASSWORD', '');
-DEFINE('DB_HOST',     '127.0.0.1');
-DEFINE('DB_NAME',     'ecommerces');
+DEFINE('DB_HOST',     getenv('MYSQLHOST') ?: '127.0.0.1');
+DEFINE('DB_USER',     getenv('MYSQLUSER') ?: 'root');
+DEFINE('DB_PASSWORD', getenv('MYSQLPASSWORD') ?: '');
+DEFINE('DB_NAME',     getenv('MYSQLDATABASE') ?: 'railway');
+DEFINE('DB_PORT',     getenv('MYSQLPORT') ?: '3306');
 
 $logs   = [];
 $errors = [];
 
 mysqli_report(MYSQLI_REPORT_OFF);
 
-$dbc = @mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, '', 3306);
-if (!$dbc) $dbc = @mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, '', 3307);
-if (!$dbc) $dbc = @mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, '');
+$dbc = @mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, '', DB_PORT);
+if (!$dbc && !getenv('MYSQLHOST')) {
+    $dbc = @mysqli_connect('127.0.0.1', 'root', '', '', 3307);
+}
 
 if (!$dbc) {
     die('<pre style="color:red">Could not connect to MySQL: ' . mysqli_connect_error() . '</pre>');
