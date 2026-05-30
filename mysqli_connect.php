@@ -1,34 +1,33 @@
-<?php
+﻿<?php
 
 if (ob_get_level() === 0) {
     ob_start();
 }
 
-define('DB_HOST', ' mysql.railway.internal');
-define('DB_USER', 'root');
-define('DB_PASS', ' zTiYUHxBPDJYWwDFVVxgdveYCqwLkHEb');
-define('DB_NAME', 'railway');
-define('DB_PORT', 3306);
+define('DB_HOST', getenv('MYSQLHOST') ?: '127.0.0.1');
+define('DB_USER', getenv('MYSQLUSER') ?: 'root');
+define('DB_PASS', getenv('MYSQLPASSWORD') ?: '');
+define('DB_NAME', getenv('MYSQLDATABASE') ?: 'railway');
+define('DB_PORT', getenv('MYSQLPORT') ?: '3306');
 
 mysqli_report(MYSQLI_REPORT_OFF);
 
-$dbc = null;
+$dbc = @mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
 
-
-$dbc = @mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, '', 3307);
-if (!$dbc) $dbc = @mysqli_connect('127.0.0.1', DB_USER, DB_PASSWORD, '', 3307);
-if (!$dbc) $dbc = @mysqli_connect(DB_HOST,     DB_USER, DB_PASSWORD, '', 3306);
-if (!$dbc) $dbc = @mysqli_connect('127.0.0.1', DB_USER, DB_PASSWORD, '', 3306);
+if (!$dbc && !getenv('MYSQLHOST')) {
+    // Local fallback for XAMPP (trying default ports)
+    $dbc = @mysqli_connect('127.0.0.1', 'root', '', 'ecommerces', 3307);
+    if (!$dbc) $dbc = @mysqli_connect('127.0.0.1', 'root', '', 'ecommerces', 3306);
+}
 
 if (!$dbc) {
-    
     ob_end_clean();
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>DB Error</title></head><body>';
     echo '<div style="font-family:sans-serif;background:#1e1e2e;color:#f38ba8;padding:40px;text-align:center;min-height:100vh;">';
     echo '<h2>⚠️ Database Connection Failed</h2>';
     echo '<p>Please ensure XAMPP MySQL is running.</p>';
     echo '<p style="font-size:0.85rem;color:#a6adc8;">' . htmlspecialchars(mysqli_connect_error()) . '</p>';
-    echo '<p style="color:#a6adc8;">Try visiting <a href="db_setup.php" style="color:#6366f1;">db_setup.php</a> to initialize the database.</p>';
+    echo '<p style="color:#a6adc8;">On Railway, ensure MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE, and MYSQLPORT are set.</p>';
     echo '</div></body></html>';
     exit;
 }
@@ -144,19 +143,19 @@ if (!$table_check || mysqli_num_rows($table_check) == 0) {
         mysqli_query($dbc, $q);
     }
 
-    
+
     $chk = mysqli_query($dbc, "SELECT COUNT(*) AS c FROM order_statuses");
     if ($chk && mysqli_fetch_assoc($chk)['c'] == 0) {
         mysqli_query($dbc, "INSERT INTO order_statuses (name) VALUES ('Pending'),('Approved'),('Disapproved'),('Cancelled'),('Delivered')");
     }
 
-    
+
     $chk = mysqli_query($dbc, "SELECT COUNT(*) AS c FROM payment_modes");
     if ($chk && mysqli_fetch_assoc($chk)['c'] == 0) {
         mysqli_query($dbc, "INSERT INTO payment_modes (name) VALUES ('Credit / Debit Card'),('PayPal'),('Cryptocurrency'),('Cash on Delivery'),('GCash')");
     }
 
-    
+
     $chk = mysqli_query($dbc, "SELECT COUNT(*) AS c FROM brands");
     if ($chk && mysqli_fetch_assoc($chk)['c'] == 0) {
         mysqli_query($dbc, "INSERT INTO brands (name, description) VALUES
@@ -165,7 +164,7 @@ if (!$table_check || mysqli_num_rows($table_check) == 0) {
             ('MobileElite', 'Cutting-edge mobile devices for the modern consumer.')");
     }
 
-    
+
     $chk = mysqli_query($dbc, "SELECT COUNT(*) AS c FROM products");
     if ($chk && mysqli_fetch_assoc($chk)['c'] == 0) {
         mysqli_query($dbc, "INSERT INTO products (brand_id, name, description, price, image, category, badge, stock) VALUES
@@ -178,7 +177,7 @@ if (!$table_check || mysqli_num_rows($table_check) == 0) {
 
 $admin_chk = mysqli_query($dbc, "SELECT COUNT(*) AS c FROM admins");
 if ($admin_chk && mysqli_fetch_assoc($admin_chk)['c'] == 0) {
-    
+
     $hashed = password_hash('admin123', PASSWORD_DEFAULT);
     $stmt = mysqli_prepare($dbc, "INSERT IGNORE INTO admins (username, email, password) VALUES (?, ?, ?)");
     $uname = 'admin';
