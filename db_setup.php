@@ -138,6 +138,9 @@ foreach ($tables as $sql) {
         $errors[] = '❌ ' . mysqli_error($dbc);
     }
 }
+
+$admin_password_hash = password_hash('admin123', PASSWORD_DEFAULT);
+
 $seeds = [
     "INSERT INTO order_statuses (name) VALUES ('Pending'),('Approved'),('Disapproved'),('Cancelled'),('Delivered')",
     "INSERT INTO payment_modes (name) VALUES ('Credit / Debit Card'),('PayPal'),('Cryptocurrency'),('Cash on Delivery'),('GCash')",
@@ -146,11 +149,10 @@ $seeds = [
         ('SoundMaster', 'Industry leader in premium audio equipment and headphones.'),
         ('MobileElite', 'Cutting-edge mobile devices for the modern consumer.')",
     "INSERT INTO products (brand_id, name, description, price, image, category, badge, stock) VALUES
-        (1, 'Quantum X Pro Laptop',    'Ultra-thin, high-performance laptop with a stunning OLED display.',        1899.99, 'assets/images/laptop.png',     'Computers', 'New Arrival', 10),
-        (3, 'Stellar Edge Smartphone', 'Next-gen flagship smartphone with edge-to-edge display.',                  1099.99, 'assets/images/smartphone.png', 'Phones',    'Bestseller',  15),
-        (2, 'Sonic Void Headphones',   'Premium active noise-cancelling wireless headphones.',                      349.99, 'assets/images/headphones.png', 'Audio',     '',            20)",
-    "INSERT INTO admins (username, email, password) VALUES
-        ('admin', 'admin@sherbuys.com', '$2y$10\$XKJhq9R3nUvQ6vL4Pz7oOuK1mW8sA2cN5dE0fH6gI3jL9mP7qR5sT')"
+        (1, 'Quantum X Pro Laptop',    'Ultra-thin, high-performance laptop with a stunning OLED display.',   1899.99, 'assets/images/laptop.png',     'Computers', 'New Arrival', 10),
+        (3, 'Stellar Edge Smartphone', 'Next-gen flagship smartphone with edge-to-edge display.',             1099.99, 'assets/images/smartphone.png', 'Phones',    'Bestseller',  15),
+        (2, 'Sonic Void Headphones',   'Premium active noise-cancelling wireless headphones.',                 349.99, 'assets/images/headphones.png', 'Audio',     '',            20)",
+    "INSERT INTO admins (username, email, password) VALUES ('admin', 'admin@sherbuys.com', '" . mysqli_real_escape_string($dbc, $admin_password_hash) . "')"
 ];
 
 foreach ($seeds as $sql) {

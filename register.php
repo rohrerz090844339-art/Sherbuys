@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!empty($fullname) && !empty($email) && !empty($password)) {
 
-        // Check if email already exists
+        
         $stmt = mysqli_prepare($dbc, "SELECT id FROM customers WHERE email = ?");
         mysqli_stmt_bind_param($stmt, 's', $email);
         mysqli_stmt_execute($stmt);
