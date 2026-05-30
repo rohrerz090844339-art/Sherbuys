@@ -1,5 +1,10 @@
 <?php
 
+// Enable error reporting for debugging on Railway (can be turned off later)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 if (ob_get_level() === 0) {
     ob_start();
 }
@@ -12,6 +17,7 @@ define('DB_PORT', getenv('MYSQLPORT') ?: '3306');
 
 mysqli_report(MYSQLI_REPORT_OFF);
 
+// Attempt connection
 $dbc = @mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
 
 if (!$dbc && !getenv('MYSQLHOST')) {
@@ -20,25 +26,26 @@ if (!$dbc && !getenv('MYSQLHOST')) {
 }
 
 if (!$dbc) {
+    // Try connecting without a database name (maybe it doesn't exist yet)
+    $dbc = @mysqli_connect(DB_HOST, DB_USER, DB_PASS, '', DB_PORT);
+}
+
+if (!$dbc) {
     ob_end_clean();
     echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>DB Error</title></head><body>';
     echo '<div style="font-family:sans-serif;background:#1e1e2e;color:#f38ba8;padding:40px;text-align:center;min-height:100vh;">';
     echo '<h2>⚠️ Database Connection Failed</h2>';
-    echo '<p>Please ensure your database is running and configured correctly.</p>';
+    echo '<p>Check your Railway environment variables: MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE, MYSQLPORT.</p>';
     echo '<p style="font-size:0.85rem;color:#a6adc8;">' . htmlspecialchars(mysqli_connect_error()) . '</p>';
-    echo '<p style="color:#a6adc8;">On Railway, ensure MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE, and MYSQLPORT are set.</p>';
     echo '</div></body></html>';
     exit;
 }
 
-
+// Ensure database exists
 if (!mysqli_select_db($dbc, DB_NAME)) {
-    $create_db = mysqli_query($dbc, "CREATE DATABASE IF NOT EXISTS `" . DB_NAME . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
+    $create_db = @mysqli_query($dbc, "CREATE DATABASE IF NOT EXISTS `" . DB_NAME . "` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
     if ($create_db) {
         mysqli_select_db($dbc, DB_NAME);
-    } else {
-        ob_end_clean();
-        die('Could not select or create database: ' . mysqli_error($dbc));
     }
 }
 
