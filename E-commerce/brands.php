@@ -29,10 +29,8 @@ if ($selected_brand) {
     mysqli_stmt_close($prod_query);
 } else {
     $res = mysqli_query($dbc, "SELECT p.*, b.name AS brand_name FROM products p LEFT JOIN brands b ON p.brand_id = b.id ORDER BY p.id DESC");
-    if ($res) {
-        while ($row = mysqli_fetch_assoc($res)) {
-            $products[] = $row;
-        }
+    while ($row = mysqli_fetch_assoc($res)) {
+        $products[] = $row;
     }
 }
 
@@ -66,27 +64,15 @@ include 'header.php';
                 <h3 style="color: white; margin-bottom: 20px; font-size: 1.2rem;">All Brands</h3>
                 <ul class="sidebar-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
                     <li>
-                        <?php
-                        
-                        $all_color  = !$selected_brand ? 'var(--accent-primary)' : 'var(--text-secondary)';
-                        $all_bg     = !$selected_brand ? 'rgba(99, 102, 241, 0.08)' : 'transparent';
-                        $all_weight = !$selected_brand ? '600' : 'normal';
-                        ?>
-                        <a href="brands.php" style="display: flex; justify-content: space-between; align-items: center; text-decoration: none; padding: 8px 12px; border-radius: 8px; color: <?php echo $all_color; ?>; background: <?php echo $all_bg; ?>; font-weight: <?php echo $all_weight; ?>;">
+                        <a href="brands.php" style="display: flex; justify-content: space-between; align-items: center; text-decoration: none; padding: 8px 12px; border-radius: 8px; color: <?php echo !$selected_brand ? 'var(--accent-primary)' : 'var(--text-secondary)'; ?>; background: <?php echo !$selected_brand ? 'rgba(99, 102, 241, 0.08)' : 'transparent'; ?>; font-weight: <?php echo !$selected_brand ? '600' : 'normal'; ?>;">
                             <span>All Brands</span>
                         </a>
                     </li>
-                    <?php foreach ($brands as $b): 
-                        
-                        $is_active    = ($selected_brand && $selected_brand['id'] == $b['id']);
-                        $link_color   = $is_active ? 'var(--accent-primary)' : 'var(--text-secondary)';
-                        $link_bg      = $is_active ? 'rgba(99, 102, 241, 0.08)' : 'transparent';
-                        $link_weight  = $is_active ? '600' : 'normal';
-                    ?>
+                    <?php foreach ($brands as $b): ?>
                         <li>
-                            <a href="brands.php?id=<?php echo $b['id']; ?>" style="display: flex; justify-content: space-between; align-items: center; text-decoration: none; padding: 8px 12px; border-radius: 8px; color: <?php echo $link_color; ?>; background: <?php echo $link_bg; ?>; font-weight: <?php echo $link_weight; ?>;">
+                            <a href="brands.php?id=<?php echo $b['id']; ?>" style="display: flex; justify-content: space-between; align-items: center; text-decoration: none; padding: 8px 12px; border-radius: 8px; color: <?php echo ($selected_brand && $selected_brand['id'] == $b['id']) ? 'var(--accent-primary)' : 'var(--text-secondary)'; ?>; background: <?php echo ($selected_brand && $selected_brand['id'] == $b['id']) ? 'rgba(99, 102, 241, 0.08)' : 'transparent'; ?>; font-weight: <?php echo ($selected_brand && $selected_brand['id'] == $b['id']) ? '600' : 'normal'; ?>;">
                                 <span><?php echo htmlspecialchars($b['name']); ?></span>
-                                <span style="font-size: 0.8rem; background: var(--bg-secondary); padding: 2px 8px; border-radius: 12px; color: var(--text-primary);"><?php echo (int)$b['product_count']; ?></span>
+                                <span style="font-size: 0.8rem; background: var(--bg-secondary); padding: 2px 8px; border-radius: 12px; color: var(--text-primary);"><?php echo $b['product_count']; ?></span>
                             </a>
                         </li>
                     <?php endforeach; ?>
@@ -103,23 +89,20 @@ include 'header.php';
                 <?php else: ?>
                     <div class="products-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px;">
                         <?php foreach ($products as $product): ?>
-                            <div class="product-card" id="product-<?php echo (int)$product['id']; ?>">
-                                <div class="product-image-container" onclick="window.location.href='product.php?id=<?php echo (int)$product['id']; ?>'" style="cursor: pointer;">
-                                    <?php if (!empty($product['badge'])): ?>
+                            <div class="product-card" id="product-<?php echo htmlspecialchars($product['id']); ?>">
+                                <div class="product-image-container" onclick="window.location.href='product.php?id=<?php echo $product['id']; ?>'" style="cursor: pointer;">
+                                    <?php if(!empty($product['badge'])): ?>
                                         <span class="product-badge"><?php echo htmlspecialchars($product['badge']); ?></span>
                                     <?php endif; ?>
                                     <img src="<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
                                 </div>
                                 <div class="product-info">
-                                    <span class="product-category" onclick="window.location.href='brands.php?id=<?php echo (int)$product['brand_id']; ?>'" style="cursor: pointer; color: var(--accent-primary);"><?php echo htmlspecialchars($product['brand_name'] ?? 'Brand'); ?></span>
-                                    <h3 class="product-name" onclick="window.location.href='product.php?id=<?php echo (int)$product['id']; ?>'" style="cursor: pointer;"><?php echo htmlspecialchars($product['name']); ?></h3>
+                                    <span class="product-category" onclick="window.location.href='brands.php?id=<?php echo $product['brand_id']; ?>'" style="cursor: pointer; color: var(--accent-primary);"><?php echo htmlspecialchars($product['brand_name'] ?? 'Brand'); ?></span>
+                                    <h3 class="product-name" onclick="window.location.href='product.php?id=<?php echo $product['id']; ?>'" style="cursor: pointer;"><?php echo htmlspecialchars($product['name']); ?></h3>
                                     <p class="product-desc"><?php echo htmlspecialchars($product['description']); ?></p>
                                     <div class="product-bottom">
                                         <span class="product-price">₱<?php echo number_format($product['price'], 2); ?></span>
-                                        <button class="btn btn-primary btn-small add-to-cart-btn"
-                                            data-id="<?php echo (int)$product['id']; ?>"
-                                            data-name="<?php echo htmlspecialchars($product['name']); ?>"
-                                            data-price="<?php echo htmlspecialchars($product['price']); ?>">Add to Cart</button>
+                                        <button class="btn btn-primary btn-small add-to-cart-btn" data-id="<?php echo htmlspecialchars($product['id']); ?>" data-name="<?php echo htmlspecialchars($product['name']); ?>" data-price="<?php echo htmlspecialchars($product['price']); ?>">Add to Cart</button>
                                     </div>
                                 </div>
                             </div>

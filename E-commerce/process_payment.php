@@ -5,7 +5,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 require_once 'mysqli_connect.php';
 
-
+// Enforce login and non-empty cart
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || empty($_SESSION['cart'])) {
     header("Location: index.php");
     exit();
@@ -14,7 +14,7 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true || empty($
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $customer_id = $_SESSION['customer_id'];
     
-    
+    // Map payment method
     $payment_method_post = $_POST['payment_method'] ?? '';
     $payment_mode_id = null;
     if ($payment_method_post === 'credit_card') {
@@ -34,26 +34,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $shipping_city = trim($_POST['shipping_city'] ?? '');
     $shipping_zip = trim($_POST['shipping_zip'] ?? '');
 
-    
+    // Calculate total amount
     $total_amount = 0;
     foreach ($_SESSION['cart'] as $item) {
         $total_amount += $item['price'] * $item['quantity'];
     }
 
-    
-    
+    // Insert order into orders table
+    // Status ID 1 = Pending
     $status_id = 1; 
     
     $query = "INSERT INTO orders (customer_id, total_amount, payment_mode_id, shipping_name, shipping_address, shipping_city, shipping_zip, status_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = mysqli_prepare($dbc, $query);
-    
+    // Types: i=customer_id, d=total_amount(decimal), i=payment_mode_id, s=shipping_name, s=shipping_address, s=shipping_city, s=shipping_zip, i=status_id
     mysqli_stmt_bind_param($stmt, 'idissssi', $customer_id, $total_amount, $payment_mode_id, $shipping_name, $shipping_address, $shipping_city, $shipping_zip, $status_id);
     
     if (mysqli_stmt_execute($stmt)) {
         $order_id = mysqli_insert_id($dbc);
         mysqli_stmt_close($stmt);
 
-        
+        // Insert order items
         foreach ($_SESSION['cart'] as $product_id => $item) {
             $product_name = $item['name'];
             $price = $item['price'];
@@ -61,20 +61,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $item_query = "INSERT INTO order_items (order_id, product_id, product_name, price, quantity) VALUES (?, ?, ?, ?, ?)";
             $item_stmt = mysqli_prepare($dbc, $item_query);
-            
+            // Types: i=order_id, i=product_id, s=product_name, d=price(decimal), i=quantity
             mysqli_stmt_bind_param($item_stmt, 'iisdi', $order_id, $product_id, $product_name, $price, $quantity);
             mysqli_stmt_execute($item_stmt);
             mysqli_stmt_close($item_stmt);
         }
 
-        
+        // Clear cart
         unset($_SESSION['cart']);
         $clear_stmt = mysqli_prepare($dbc, "DELETE FROM cart WHERE customer_id = ?");
         mysqli_stmt_bind_param($clear_stmt, 'i', $customer_id);
         mysqli_stmt_execute($clear_stmt);
         mysqli_stmt_close($clear_stmt);
 
-        
+        // Show success message
         include 'header.php';
         ?>
         <section class="success-section" style="padding: 200px 0 150px; min-height: 60vh; text-align: center;">
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php
         include 'footer.php';
     } else {
-        
+        // Show a styled error page with the real MySQL error
         include 'header.php';
         ?>
         <section style="padding: 200px 0 150px; min-height: 60vh; text-align: center;">

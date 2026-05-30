@@ -1,5 +1,5 @@
 <?php
-
+// Load products from the database
 require_once 'mysqli_connect.php';
 
 $products = [];
